@@ -13,37 +13,66 @@ review_manager = Review()
 # Session to track logged-in user
 session = {"user_id": None, "username": None, "is_admin": False}
 
+
 def show_menu():
     print("\n===== IMDB-like App Menu =====")
-    print("1. Register User")
-    print("2. Login User")
-    print("3. Logout User")
-    print("4. Add Movie (Admin Only)")
-    print("5. List Movies")
-    print("6. Update Movie (Admin Only)")
-    print("7. Delete Movie (Admin Only)")
-    print("8. Add Review")
-    print("9. Get Reviews for Movie")
-    print("10. Search Movies")
-    print("11. Like a Movie")
-    print("12. View Users (Admin Only)") 
-    print("13. Exit")
+
+    print("1. List Movies")
+    print("2. Search Movies")
+    print("3. Get Reviews for Movie")
+
+    if is_logged_in():
+        print("4. Add Review")
+        print("5. Like a Movie")
+
+        print("u Logout User")
+
+    else:
+        print("u. Register/Login")
+
+        print("\n --- You need to login for additional functionalities ---\n")
+
+    if is_admin():
+
+
+        print("==============================")
+        print("6. View Users (Admin Only)")
+        print("7. Add Movie (Admin Only)")
+        print("8. Update Movie (Admin Only)")
+        print("9. Delete Movie (Admin Only)")
+    print("e Exit")
+
     print("==============================")
 
-def ensure_logged_in():
-    if session['user_id'] is None:
-        print("You need to log in first!")
+
+def is_logged_in():
+    if session["user_id"] is None:
         return False
     return True
 
+
+def is_admin():
+    if not session["is_admin"]:
+        return False
+    return True
+
+
+def ensure_logged_in():
+    if is_logged_in():
+
+        return True
+    print("You need to log in first!")
+    return False
+
+
 def ensure_admin():
-    print(f"User ID: {session.get('user_id')}, Is Admin: {session.get('is_admin')}")
-    if session['user_id'] is None:
+    
+    if not is_logged_in:
         print("You need to log in first!")
         return False
-    if not session['is_admin']:
-        print("You need admin privileges to perform this action!")
-        return False
+    if is_admin:
+        return True
+    print("You need admin privileges to perform this action!")
     return True
 
 
@@ -59,6 +88,7 @@ def initialize_admin():
             else:
                 print("Username and password cannot be empty. Please try again.")
 
+
 def view_users():
     if ensure_logged_in() and ensure_admin():
         print("\n--- List of All Users ---")
@@ -67,16 +97,13 @@ def view_users():
         print("Admin access required to view users.")
 
 
-
-
 def main():
 
     clear_screen()
-    
+
     # Ensure an admin account is created if it doesn't exist
     initialize_admin()
     first_run = True
-
 
     while True:
         if not first_run:
@@ -89,56 +116,113 @@ def main():
         choice = input("Enter your choice: ").strip()
 
         if choice == "1":
-            print("\n--- Register User ---")
-            while True:
-                username = input("Enter username: ").strip()
-                if not username:
-                    print("Username cannot be empty. Please try again.")
-                    continue
-                password = input("Enter password: ").strip()
-                if not password:
-                    print("Password cannot be empty. Please try again.")
-                    continue
-                user_manager.register_user(username, password)
-                break
+            print("\n--- List Movies ---")
+            movie_manager.formatted_movie_list()  # Reuse the formatted movie list function
+
+        elif choice == "u":
+            if session["user_id"] is not None:
+                print(f"User '{session['username']}' logged out.")
+                session["user_id"] = None
+                session["username"] = None
+                session["is_admin"] = False
+
+            else:
+
+                ans = Prompt.ask("New User(n) or Existing(l)?", choices=["n", "l"])
+                if ans == "l":
+                    print("\n--- Login User ---")
+
+                    username = input("Enter username: ").strip()
+
+                    password = input("Enter password: ").strip()
+                    if not username or not password:
+                        print("Username and password cannot be empty.")
+                        continue
+                    user = user_manager.login_user(username, password)
+                    if user:
+                        session["user_id"] = user[0]
+                        session["username"] = username
+                        session["is_admin"] = user[2]
+                        print(f"Logged in as {username}")
+                    else:
+                        print("Login failed. Please check your credentials.")
+                elif ans == "n":
+                    print("\n--- Register User ---")
+                    while True:
+                        username = input("Enter username: ").strip()
+                        if not username:
+                            print("Username cannot be empty. Please try again.")
+                            continue
+                        password = input("Enter password: ").strip()
+                        if not password:
+                            print("Password cannot be empty. Please try again.")
+                            continue
+                        user_manager.register_user(username, password)
+
+                        print("You will need to login to continue")
+                        break
 
         elif choice == "2":
-            if session['user_id'] is not None:
-                print(f"User '{session['username']}' is already logged in. Please log out first.")
+            print("\n--- Search Movies ---")
+            search_term = input("Enter search term (title/genre): ").strip()
+            if not search_term:
+                print("Search term cannot be empty.")
                 continue
-            print("\n--- Login User ---")
-            username = (Prompt.ask("Enter Username")).strip()
-            
-            password = input("Enter password: ").strip()
-            if not username or not password:
-                print("Username and password cannot be empty.")
-                continue
-            user = user_manager.login_user(username, password)
-            if user:
-                session['user_id'] = user[0]
-                session['username'] = username
-                session['is_admin'] = user[2]
-                print(f"Logged in as {username}")
-            else:
-                print("Login failed. Please check your credentials.")
-
+            movie_manager.search_movies(search_term)
         elif choice == "3":
-            if session['user_id'] is None:
-                print("No user is currently logged in.")
-            else:
-                print(f"User '{session['username']}' logged out.")
-                session['user_id'] = None
-                session['username'] = None
-                session['is_admin'] = False
+            print("\n--- Get Reviews for Movie ---")
+            movie_manager.formatted_movie_list()  # Display movies before getting reviews
+            movie_id = input("Enter the Movie ID to get reviews: ").strip()
+            if not movie_id.isdigit():
+                print("Invalid Movie ID. It must be a number.")
+                continue
+            review_manager.get_reviews_for_movie(movie_id)
+
 
         elif choice == "4":
+            if ensure_logged_in():
+                print("\n--- Add Review ---")
+                movie_manager.formatted_movie_list()  # Show movies in formatted manner before adding a review
+                movie_id = input("Enter movie ID to review: ").strip()
+                if not movie_id.isdigit():
+                    print("Invalid Movie ID. It must be a number.")
+                    continue
+                review_text = input("Enter your review: ").strip()
+                if not review_text:
+                    print("Review text cannot be empty.")
+                    continue
+                try:
+                    rating = float(input("Enter your rating (0.0 - 10.0): ").strip())
+                    if rating < 0.0 or rating > 10.0:
+                        print("Rating must be between 0.0 and 10.0.")
+                        continue
+                except ValueError:
+                    print("Invalid rating. It must be a number between 0.0 and 10.0.")
+                    continue
+                review_manager.add_review(
+                    session["user_id"], movie_id, review_text, rating
+                )
+
+        elif choice == "5":
+            if ensure_logged_in():
+                print("\n--- Like a Movie ---")
+                movie_manager.formatted_movie_list()  # Reuse formatted list for liking a movie
+                movie_id = input("Enter the Movie ID to like: ").strip()
+                if not movie_id.isdigit():
+                    print("Invalid Movie ID. It must be a number.")
+                    return
+                movie_manager.like_movie(movie_id)
+        elif choice == "6":
+            view_users()  # Call the function to display all users
+
+        elif choice == "7":
             if ensure_logged_in() and ensure_admin():
                 print("\n--- Add Movie ---")
                 title = input("Enter movie title: ").strip()
                 if not title:
                     print("Title cannot be empty.")
                     continue
-                
+
                 # Prompt for genre with validation
                 print("Available genres:")
                 print(", ".join(movie_manager.allowed_genres))
@@ -157,11 +241,7 @@ def main():
 
                 movie_manager.add_movie(title, genre, release_date, description, cast)
 
-        elif choice == "5":
-            print("\n--- List Movies ---")
-            movie_manager.formatted_movie_list()  # Reuse the formatted movie list function
-
-        elif choice == "6":
+        elif choice == "8":
             if ensure_logged_in() and ensure_admin():
                 print("\n--- Update Movie ---")
                 movie_manager.formatted_movie_list()  # Display movies in a formatted manner before updating
@@ -187,14 +267,24 @@ def main():
                     continue
 
                 # Prompt for new details (press Enter to keep current)
-                title = input("Enter new title (or press Enter to keep current): ").strip()
-                genre = input("Enter new genre (or press Enter to keep current): ").strip()
+                title = input(
+                    "Enter new title (or press Enter to keep current): "
+                ).strip()
+                genre = input(
+                    "Enter new genre (or press Enter to keep current): "
+                ).strip()
                 if genre and genre not in movie_manager.allowed_genres:
                     print("Invalid genre. Update aborted.")
                     continue
-                release_date = input("Enter new release date (YYYY-MM-DD) (or press Enter to keep current): ").strip()
-                description = input("Enter new description (or press Enter to keep current): ").strip()
-                cast = input("Enter new cast (or press Enter to keep current): ").strip()
+                release_date = input(
+                    "Enter new release date (YYYY-MM-DD) (or press Enter to keep current): "
+                ).strip()
+                description = input(
+                    "Enter new description (or press Enter to keep current): "
+                ).strip()
+                cast = input(
+                    "Enter new cast (or press Enter to keep current): "
+                ).strip()
 
                 # If any field is left blank, pass None to keep current value
                 title = title if title else None
@@ -203,9 +293,11 @@ def main():
                 description = description if description else None
                 cast = cast if cast else None
 
-                movie_manager.update_movie(movie_id, title, genre, release_date, description, cast)
+                movie_manager.update_movie(
+                    movie_id, title, genre, release_date, description, cast
+                )
 
-        elif choice == "7":
+        elif choice == "9":
             if ensure_logged_in() and ensure_admin():
                 print("\n--- Delete Movie ---")
                 movie_manager.formatted_movie_list()  # Display movies in a formatted manner before deleting
@@ -215,69 +307,25 @@ def main():
                     continue
 
                 # Confirm deletion
-                confirm = input(f"Are you sure you want to delete Movie ID {movie_id}? (Y/N): ").strip().lower()
-                if confirm == 'y':
+                confirm = (
+                    input(
+                        f"Are you sure you want to delete Movie ID {movie_id}? (Y/N): "
+                    )
+                    .strip()
+                    .lower()
+                )
+                if confirm == "y":
                     movie_manager.delete_movie(movie_id)
                 else:
                     print("Deletion cancelled.")
 
-        elif choice == "8":
-            if ensure_logged_in():
-                print("\n--- Add Review ---")
-                movie_manager.formatted_movie_list()  # Show movies in formatted manner before adding a review
-                movie_id = input("Enter movie ID to review: ").strip()
-                if not movie_id.isdigit():
-                    print("Invalid Movie ID. It must be a number.")
-                    continue
-                review_text = input("Enter your review: ").strip()
-                if not review_text:
-                    print("Review text cannot be empty.")
-                    continue
-                try:
-                    rating = float(input("Enter your rating (0.0 - 10.0): ").strip())
-                    if rating < 0.0 or rating > 10.0:
-                        print("Rating must be between 0.0 and 10.0.")
-                        continue
-                except ValueError:
-                    print("Invalid rating. It must be a number between 0.0 and 10.0.")
-                    continue
-                review_manager.add_review(session['user_id'], movie_id, review_text, rating)
-
-        elif choice == "9":
-            print("\n--- Get Reviews for Movie ---")
-            movie_manager.formatted_movie_list()  # Display movies before getting reviews
-            movie_id = input("Enter the Movie ID to get reviews: ").strip()
-            if not movie_id.isdigit():
-                print("Invalid Movie ID. It must be a number.")
-                continue
-            review_manager.get_reviews_for_movie(movie_id)
-
-        elif choice == "10":
-            print("\n--- Search Movies ---")
-            search_term = input("Enter search term (title/genre): ").strip()
-            if not search_term:
-                print("Search term cannot be empty.")
-                continue
-            movie_manager.search_movies(search_term)
-
-        elif choice == "11":
-            if ensure_logged_in():
-                print("\n--- Like a Movie ---")
-                movie_manager.formatted_movie_list()  # Reuse formatted list for liking a movie
-                movie_id = input("Enter the Movie ID to like: ").strip()
-                if not movie_id.isdigit():
-                    print("Invalid Movie ID. It must be a number.")
-                    return
-                movie_manager.like_movie(movie_id)
-        elif choice == "12":
-            view_users()  # Call the function to display all users
-
-        elif choice == "13":
+        elif choice == "e":
             print("Exiting...")
             break
 
         else:
             print("Invalid choice. Please select a valid option from the menu.")
+
 
 if __name__ == "__main__":
     main()
