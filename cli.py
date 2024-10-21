@@ -1,8 +1,10 @@
 from movie import Movie
 from user import User
 from review import Review
+from utils import clear_screen
 
 from rich.prompt import Prompt
+
 
 movie_manager = Movie()
 user_manager = User()
@@ -65,11 +67,24 @@ def view_users():
         print("Admin access required to view users.")
 
 
+
+
 def main():
+
+    clear_screen()
+    
     # Ensure an admin account is created if it doesn't exist
     initialize_admin()
+    first_run = True
+
 
     while True:
+        if not first_run:
+            print("--- Press enter to continue  ---")
+            input()
+            clear_screen()
+        else:
+            first_run = False
         show_menu()
         choice = input("Enter your choice: ").strip()
 

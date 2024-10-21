@@ -2,6 +2,7 @@ from db import Database
 from datetime import datetime
 from rich.table import Table
 from  rich.console import Console
+from utils import print_table
 class Movie:
     def __init__(self):
         self.db = Database()
@@ -64,17 +65,18 @@ class Movie:
         except Exception as e:
             print(f"Error adding movie: {e}")
             print("Movie not added successfully due to an error.")
-
-    def list_movies(self):
-        """ List all movies from the database """
-        query = "SELECT * FROM movies"
-        movies = self.db.fetch_query(query)
-        if movies:
+    
+    #old redundant function
+    # def list_movies(self):
+    #     """ List all movies from the database """
+    #     query = "SELECT * FROM movies"
+    #     movies = self.db.fetch_query(query)
+    #     if movies:
             
-            for movie in movies:
-                print(f"{movie[0]} - {movie[1]} ({movie[2]})")
-        else:
-            print("No movies found.")
+    #         for movie in movies:
+    #             print(f"{movie[0]} - {movie[1]} ({movie[2]})")
+    #     else:
+    #         print("No movies found.")
 
     def get_all_movie_details(self):
         """ Fetch all movie details from the database """
@@ -125,16 +127,8 @@ class Movie:
         search_term = f"%{search_term}%"
         movies = self.db.fetch_query(query, (search_term, search_term))
         if movies:
-            for movie in movies:
-                print(f"Movie ID: {movie[0]}")
-                print(f"Title: {movie[1]}")
-                print(f"Genre: {movie[2]}")
-                print(f"Release Date: {movie[3]}")
-                print(f"Description: {movie[4]}")
-                print(f"Cast: {movie[5]}")
-                print(f"Rating: {movie[6]}")
-                print(f"Likes: {movie[7]}")
-                print("-" * 40)
+            columns = ["Movie ID", "Title", "Genre", "Release Date", "Description", "Cast", "Rating", "Likes"]
+            print_table("Movies", columns, movies)
         else:
             print("No movies found.")
 
@@ -144,22 +138,6 @@ class Movie:
         if not movies:
             print("No movies available.")
             return
+        columns = ["Movie ID", "Title",  "Genre", "Release Date", "Description", "Cast", "Rating", "Likes"]
+        print_table("Movies", columns, movies)
 
-        table = Table(title="Movies")
-        table.add_column("Movie ID")
-
-        table.add_column("Title")
-        table.add_column("Genre")
-        table.add_column("Release Date")
-        table.add_column("Description")
-        table.add_column("Cast")
-        table.add_column("Rating")
-        table.add_column("Likes")
-
-        # Print each movie's details in a formatted row
-        for movie in movies:
-            l = [str(x) for x in movie]
-            table.add_row(*l)
-        
-        console = Console()
-        console.print(table)
