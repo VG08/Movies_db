@@ -256,9 +256,6 @@ def main():
                 print("Available genres:")
                 print(", ".join(movie_manager.allowed_genres))
                 genre = Prompt.ask("Enter movie genre: ", choices=movie_manager.allowed_genres).strip()
-                if not genre:
-                    print("Genre cannot be empty.")
-                    continue
 
                 release_date = input("Enter release date (YYYY-MM-DD): ").strip()
                 if not release_date:
@@ -300,7 +297,7 @@ def main():
                 ).strip()
                 genre = Prompt.ask(
                     "Enter new genre (or press Enter to keep current): ",
-                    choices=movie_manager.allowed_genres
+                    choices=movie_manager.allowed_genres +[""]
                 ).strip()
 
                 release_date = input(
