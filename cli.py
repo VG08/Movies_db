@@ -22,8 +22,9 @@ def show_menu():
     print("3. Get Reviews for Movie")
 
     if is_logged_in():
-        print("4. Add Review")
-        print("5. Like a Movie")
+        print("4. Get complete details for a Movie")
+        print("5. Add Review")
+        print("6. Like a Movie")
 
         print("u Logout User")
 
@@ -36,10 +37,10 @@ def show_menu():
 
 
         print("==============================")
-        print("6. View Users (Admin Only)")
-        print("7. Add Movie (Admin Only)")
-        print("8. Update Movie (Admin Only)")
-        print("9. Delete Movie (Admin Only)")
+        print("7. View Users (Admin Only)")
+        print("8. Add Movie (Admin Only)")
+        print("9. Update Movie (Admin Only)")
+        print("10. Delete Movie (Admin Only)")
     print("e Exit")
 
     print("==============================")
@@ -177,9 +178,35 @@ def main():
                 print("Invalid Movie ID. It must be a number.")
                 continue
             review_manager.get_reviews_for_movie(movie_id)
-
-
         elif choice == "4":
+
+            movie_manager.formatted_movie_list()
+
+            movie_id = input("Enter the Movie ID to see: ").strip()
+            
+            if not movie_id.isdigit():
+                print("Invalid movie ID. It must be a number.")
+                continue
+
+            movies = movie_manager.get_all_movies_details()
+            clear_screen()
+            print("\n--- Movie Details---")
+
+            for movie in movies:
+                if str(movie[0]) == movie_id:
+                    print("\nCurrent Movie Details:")
+                    print(f"Movie ID: {movie[0]}")
+                    print(f"Title: {movie[1]}")
+                    print(f"Genre: {movie[2]}")
+                    print(f"Release Date: {movie[3]}")
+                    print(f"Description: {movie[4]}")
+                    print(f"Cast: {movie[5]}")
+                    break
+            else:
+                print(f"No movie found with Movie ID {movie_id}.")
+                continue
+
+        elif choice == "5":
             if ensure_logged_in():
                 print("\n--- Add Review ---")
                 movie_manager.formatted_movie_list()  # Show movies in formatted manner before adding a review
@@ -199,11 +226,13 @@ def main():
                 except ValueError:
                     print("Invalid rating. It must be a number between 0.0 and 10.0.")
                     continue
+                
                 review_manager.add_review(
                     session["user_id"], movie_id, review_text, rating
                 )
+                movie_manager.update_rating(movie_id)
 
-        elif choice == "5":
+        elif choice == "6":
             if ensure_logged_in():
                 print("\n--- Like a Movie ---")
                 movie_manager.formatted_movie_list()  # Reuse formatted list for liking a movie
@@ -212,10 +241,10 @@ def main():
                     print("Invalid Movie ID. It must be a number.")
                     return
                 movie_manager.like_movie(movie_id)
-        elif choice == "6":
+        elif choice == "7":
             view_users()  # Call the function to display all users
 
-        elif choice == "7":
+        elif choice == "8":
             if ensure_logged_in() and ensure_admin():
                 print("\n--- Add Movie ---")
                 title = input("Enter movie title: ").strip()
@@ -226,7 +255,7 @@ def main():
                 # Prompt for genre with validation
                 print("Available genres:")
                 print(", ".join(movie_manager.allowed_genres))
-                genre = input("Enter movie genre: ").strip()
+                genre = Prompt.ask("Enter movie genre: ", choices=movie_manager.allowed_genres).strip()
                 if not genre:
                     print("Genre cannot be empty.")
                     continue
@@ -241,7 +270,7 @@ def main():
 
                 movie_manager.add_movie(title, genre, release_date, description, cast)
 
-        elif choice == "8":
+        elif choice == "9":
             if ensure_logged_in() and ensure_admin():
                 print("\n--- Update Movie ---")
                 movie_manager.formatted_movie_list()  # Display movies in a formatted manner before updating
@@ -250,8 +279,7 @@ def main():
                     print("Invalid movie ID. It must be a number.")
                     continue
 
-                # Optionally, display current details for the selected movie
-                movies = movie_manager.get_all_movie_details()
+                movies = movie_manager.get_all_movies_details()
                 for movie in movies:
                     if str(movie[0]) == movie_id:
                         print("\nCurrent Movie Details:")
@@ -270,12 +298,11 @@ def main():
                 title = input(
                     "Enter new title (or press Enter to keep current): "
                 ).strip()
-                genre = input(
-                    "Enter new genre (or press Enter to keep current): "
+                genre = Prompt.ask(
+                    "Enter new genre (or press Enter to keep current): ",
+                    choices=movie_manager.allowed_genres
                 ).strip()
-                if genre and genre not in movie_manager.allowed_genres:
-                    print("Invalid genre. Update aborted.")
-                    continue
+
                 release_date = input(
                     "Enter new release date (YYYY-MM-DD) (or press Enter to keep current): "
                 ).strip()
@@ -286,18 +313,12 @@ def main():
                     "Enter new cast (or press Enter to keep current): "
                 ).strip()
 
-                # If any field is left blank, pass None to keep current value
-                title = title if title else None
-                genre = genre if genre else None
-                release_date = release_date if release_date else None
-                description = description if description else None
-                cast = cast if cast else None
 
                 movie_manager.update_movie(
-                    movie_id, title, genre, release_date, description, cast
+                    movie_id=movie_id, title=title, genre=genre,release_date= release_date, description=description, cast=cast
                 )
 
-        elif choice == "9":
+        elif choice == "10":
             if ensure_logged_in() and ensure_admin():
                 print("\n--- Delete Movie ---")
                 movie_manager.formatted_movie_list()  # Display movies in a formatted manner before deleting
@@ -308,13 +329,17 @@ def main():
 
                 # Confirm deletion
                 confirm = (
-                    input(
-                        f"Are you sure you want to delete Movie ID {movie_id}? (Y/N): "
+                    Prompt.ask(
+                        f"Are you sure you want to delete Movie ID {movie_id}?",
+                        choices=["y","n"]
                     )
                     .strip()
                     .lower()
                 )
                 if confirm == "y":
+                    #Delete Reviews first
+                    review_manager.delete_reviews_for_movie(movie_id=movie_id)
+
                     movie_manager.delete_movie(movie_id)
                 else:
                     print("Deletion cancelled.")

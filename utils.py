@@ -7,7 +7,7 @@ def print_table(title, columns, data):
 
     table = Table(title=title, padding=1)
     for column in columns:
-        table.add_column(column)
+        table.add_column(column, overflow="ellipsis")
 
     for row in data:
         l = [str(x) for x in row]

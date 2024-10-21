@@ -30,6 +30,8 @@ class Database:
     def fetch_query(self, query, params=None):
         try:
             if self.connection.is_connected():
+                self.cursor = self.connection.cursor()
+
                 self.cursor.execute(query, params)
                 result = self.cursor.fetchall()
                 return result

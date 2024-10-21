@@ -10,6 +10,7 @@ class Review:
         VALUES (%s, %s, %s, %s)
         """
         self.db.execute_query(query, (user_id, movie_id, review_text, rating))
+
         print("Review added successfully!")
 
     def get_reviews_for_movie(self, movie_id):
@@ -17,3 +18,7 @@ class Review:
         reviews = self.db.fetch_query(query, (movie_id,))
         for review in reviews:
             print(f"Rating: {review[1]} - {review[0]}")
+
+    def delete_reviews_for_movie(self, movie_id):
+        query = "DELETE FROM reviews WHERE movie_id=%s"
+        self.db.execute_query(query, (movie_id,))

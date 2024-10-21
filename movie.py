@@ -1,7 +1,5 @@
 from db import Database
 from datetime import datetime
-from rich.table import Table
-from  rich.console import Console
 from utils import print_table
 class Movie:
     def __init__(self):
@@ -16,7 +14,9 @@ class Movie:
         else:
             print(f"Invalid genre. Allowed genres are: {', '.join(self.allowed_genres)}")
             return False
-        
+    
+
+
     def like_movie(self, movie_id):
         """ Increment the like count of a movie """
         # Check if the movie exists
@@ -67,13 +67,21 @@ class Movie:
             print("Movie not added successfully due to an error.")
 
 
-    def get_all_movie_details(self):
+    def get_all_movies_details(self):
         """ Fetch all movie details from the database """
         query = "SELECT * FROM movies"
         movies = self.db.fetch_query(query)
         return movies
-
-    def update_movie(self, movie_id, title=None, genre=None, release_date=None, description=None, cast=None):
+    
+    def get_movie_details(self, movie_id):
+        """ Fetch all details of a movie from the database"""    
+        query_check = "SELECT * FROM movies WHERE movie_id=%s"
+        movie = self.db.fetch_query(query_check, (movie_id,)) 
+        if movie:
+            return movie[0]
+        else: 
+            return False
+    def update_movie(self, movie_id, title=None, genre=None, release_date=None, description=None, cast=None, rating=None):
         """ Update a movie's details """
         # Validate inputs if they are provided
         if genre and not self.validate_genre(genre):
@@ -82,6 +90,16 @@ class Movie:
         if release_date and not self.validate_date(release_date):
             print("Movie not updated successfully due to invalid release date.")
             return
+
+        movie = self.get_movie_details(movie_id=movie_id)
+        title = title if title else movie[1]
+        genre = genre if genre else movie[2]
+        release_date = release_date if release_date else movie[3]
+        description = description if description else movie[4]
+        cast = cast if cast else movie[5]
+       
+
+
 
         try:
             query = "UPDATE movies SET title=%s, genre=%s, release_date=%s, description=%s, cast=%s WHERE movie_id=%s"
@@ -94,8 +112,7 @@ class Movie:
     def delete_movie(self, movie_id):
         """ Delete a movie from the database """
         # First, check if the movie exists
-        query_check = "SELECT * FROM movies WHERE movie_id=%s"
-        movie = self.db.fetch_query(query_check, (movie_id,))
+        movie = self.get_movie_details(movie_id=movie_id)
         if not movie:
             print(f"No movie found with Movie ID {movie_id}.")
             return
@@ -111,22 +128,35 @@ class Movie:
     def search_movies(self, search_term):
         """ Search for movies by title or genre """
         query = """
-        SELECT * FROM movies WHERE title LIKE %s OR genre LIKE %s
+        SELECT movie_id title genre description rating like FROM movies WHERE title LIKE %s OR genre LIKE %s
         """
         search_term = f"%{search_term}%"
         movies = self.db.fetch_query(query, (search_term, search_term))
         if movies:
-            columns = ["Movie ID", "Title", "Genre", "Release Date", "Description", "Cast", "Rating", "Likes"]
+            columns = ["Movie ID", "Title", "Genre", "Description", "Rating", "Likes"]
+            
             print_table("Movies", columns, movies)
         else:
             print("No movies found.")
 
+    def update_rating(self, movie_id):
+        query = "SELECT COUNT(*) FROM reviews where movie_id=%s"
+        n = self.db.fetch_query(query, (movie_id,))
+        n = n[0][0]
+        query = "select sum(rating) from reviews where movie_id=%s"
+        s_rating = self.db.fetch_query(query, (movie_id,))[0][0]
+        new_rating = s_rating/n
+        query = "update movies set rating=%s where movie_id=%s"
+        self.db.execute_query(query, (new_rating, movie_id))
+
     def formatted_movie_list(self):
         """ Display all movies in a formatted manner """
-        movies = self.get_all_movie_details()
+        query = """
+        SELECT movie_id, title, genre, description, rating, likes FROM movies"""
+        movies = self.db.fetch_query(query)
         if not movies:
             print("No movies available.")
             return
-        columns = ["Movie ID", "Title",  "Genre", "Release Date", "Description", "Cast", "Rating", "Likes"]
+        columns = ["Movie ID", "Title",  "Genre", "Description", "Rating", "Likes"]
         print_table("Movies", columns, movies)
 
