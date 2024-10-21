@@ -65,18 +65,7 @@ class Movie:
         except Exception as e:
             print(f"Error adding movie: {e}")
             print("Movie not added successfully due to an error.")
-    
-    #old redundant function
-    # def list_movies(self):
-    #     """ List all movies from the database """
-    #     query = "SELECT * FROM movies"
-    #     movies = self.db.fetch_query(query)
-    #     if movies:
-            
-    #         for movie in movies:
-    #             print(f"{movie[0]} - {movie[1]} ({movie[2]})")
-    #     else:
-    #         print("No movies found.")
+
 
     def get_all_movie_details(self):
         """ Fetch all movie details from the database """
