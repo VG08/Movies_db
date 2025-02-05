@@ -1,5 +1,5 @@
 from db import Database
-
+from utils import clear_screen
 class Review:
     def __init__(self):
         self.db = Database()
@@ -16,8 +16,11 @@ class Review:
     def get_reviews_for_movie(self, movie_id):
         query = "SELECT review_text, rating FROM reviews WHERE movie_id=%s"
         reviews = self.db.fetch_query(query, (movie_id,))
+        clear_screen()
+        print("---Reviews---")
         for review in reviews:
             print(f"Rating: {review[1]} - {review[0]}")
+            print()
 
     def delete_reviews_for_movie(self, movie_id):
         query = "DELETE FROM reviews WHERE movie_id=%s"

@@ -8,14 +8,14 @@ from rich.prompt import Prompt
 
 movie_manager = Movie()
 user_manager = User()
-review_manager = Review()
+review_manager = Review()   
 
 # Session to track logged-in user
 session = {"user_id": None, "username": None, "is_admin": False}
 
 
 def show_menu():
-    print("\n===== IMDB-like App Menu =====")
+    print("\n===== The Movie Database =====")
 
     print("1. List Movies")
     print("2. Search Movies")
@@ -172,15 +172,27 @@ def main():
             movie_manager.search_movies(search_term)
         elif choice == "3":
             print("\n--- Get Reviews for Movie ---")
-            movie_manager.formatted_movie_list()  # Display movies before getting reviews
-            movie_id = input("Enter the Movie ID to get reviews: ").strip()
+            search_term = input("Search for the movie you want reviews for (title/genre): ").strip()
+            if not search_term:
+                print("Search term cannot be empty.")
+                continue
+            if not movie_manager.search_movies(search_term):
+                continue
+    
+            movie_id = input("Enter the Movie ID for which you want reviews: ").strip()
             if not movie_id.isdigit():
                 print("Invalid Movie ID. It must be a number.")
                 continue
             review_manager.get_reviews_for_movie(movie_id)
         elif choice == "4":
-
-            movie_manager.formatted_movie_list()
+            print("\n--- Get Reviews for Movie ---")
+            search_term = input("Search for the movie you want reviews for (title/genre): ").strip()
+            if not search_term:
+                print("Search term cannot be empty.")
+                continue
+            if not movie_manager.search_movies(search_term):
+                continue
+            
 
             movie_id = input("Enter the Movie ID to see: ").strip()
             
@@ -201,6 +213,7 @@ def main():
                     print(f"Release Date: {movie[3]}")
                     print(f"Description: {movie[4]}")
                     print(f"Cast: {movie[5]}")
+                    print()
                     break
             else:
                 print(f"No movie found with Movie ID {movie_id}.")
@@ -209,7 +222,14 @@ def main():
         elif choice == "5":
             if ensure_logged_in():
                 print("\n--- Add Review ---")
-                movie_manager.formatted_movie_list()  # Show movies in formatted manner before adding a review
+                
+                search_term = input("Search for the movie you want to review(title/genre): ").strip()
+                if not search_term:
+                    print("Search term cannot be empty.")
+                    continue
+                if not movie_manager.search_movies(search_term):
+                    continue
+                print()
                 movie_id = input("Enter movie ID to review: ").strip()
                 if not movie_id.isdigit():
                     print("Invalid Movie ID. It must be a number.")
@@ -235,7 +255,12 @@ def main():
         elif choice == "6":
             if ensure_logged_in():
                 print("\n--- Like a Movie ---")
-                movie_manager.formatted_movie_list()  # Reuse formatted list for liking a movie
+                search_term = input("Search for the movie you want to like (title/genre): ").strip()
+                if not search_term:
+                    print("Search term cannot be empty.")
+                    continue
+                if not movie_manager.search_movies(search_term):
+                    continue
                 movie_id = input("Enter the Movie ID to like: ").strip()
                 if not movie_id.isdigit():
                     print("Invalid Movie ID. It must be a number.")

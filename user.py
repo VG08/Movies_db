@@ -1,5 +1,6 @@
 from db import Database
 import hashlib
+from utils import print_table
 
 class User:
     def __init__(self):
@@ -46,13 +47,6 @@ class User:
         if not users:
             print("No users available.")
             return
+        columns = ["User ID", "Username", "is_Admin"]
 
-        # Print the table header
-        print("{:<10} {:<20} {:<10}".format("User ID", "Username", "Admin"))
-        print("-" * 40)
-
-        # Print each user's details in a formatted row
-        for user in users:
-            is_admin = "Yes" if user[2] else "No"
-            print("{:<10} {:<20} {:<10}".format(user[0], user[1], is_admin))
-        print("-" * 40)
+        print_table("Users", columns, users)

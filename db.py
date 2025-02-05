@@ -7,9 +7,9 @@ class Database:
             # Establish the database connection
             self.connection = mysql.connector.connect(
                 host="localhost",
-                user="root",  # Change this to your actual MySQL username
-                password="mysql",  # Change this to your actual MySQL password
-                database="imdb_db"  # Make sure the database "imdb_db" exists
+                user="root",  
+                password="mysql",  
+                database="imdb_db"  
             )
             if self.connection.is_connected():
                 print("Successfully connected to the database")
@@ -23,9 +23,10 @@ class Database:
             if self.connection.is_connected():
                 self.cursor.execute(query, params)
                 self.connection.commit()
-                print("Query executed successfully")
+                return True
         except Error as e:
             print(f"Error executing query: {e}")
+            return False
 
     def fetch_query(self, query, params=None):
         try:

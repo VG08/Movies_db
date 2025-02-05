@@ -5,7 +5,7 @@ class Movie:
     def __init__(self):
         self.db = Database()
         # List of allowed genres
-        self.allowed_genres = ['Action', 'Comedy', 'Drama', 'Horror', 'Sci-Fi', 'Romance', 'Documentary']
+        self.allowed_genres = ['Action', 'Comedy', 'Drama', 'Horror', 'Sci-Fi', 'Romance', 'Documentary', 'Fantasy', 'Adventure']
 
     def validate_genre(self, genre):
         """ Validate if the genre is from the allowed list """
@@ -60,7 +60,9 @@ class Movie:
             INSERT INTO movies (title, genre, release_date, description, cast) 
             VALUES (%s, %s, %s, %s, %s)
             """
-            self.db.execute_query(query, (title, genre, release_date, description, cast))
+            r = self.db.execute_query(query, (title, genre, release_date, description, cast))
+            if not r:
+                raise Exception()
             print(f"Movie '{title}' added successfully!")
         except Exception as e:
             print(f"Error adding movie: {e}")
@@ -128,16 +130,20 @@ class Movie:
     def search_movies(self, search_term):
         """ Search for movies by title or genre """
         query = """
-        SELECT movie_id title genre description rating like FROM movies WHERE title LIKE %s OR genre LIKE %s
+        SELECT movie_id, title, genre, description, rating, likes FROM movies WHERE title LIKE %s OR genre LIKE %s
         """
         search_term = f"%{search_term}%"
+        
         movies = self.db.fetch_query(query, (search_term, search_term))
         if movies:
             columns = ["Movie ID", "Title", "Genre", "Description", "Rating", "Likes"]
-            
+
             print_table("Movies", columns, movies)
+            return True
+
         else:
             print("No movies found.")
+            return False
 
     def update_rating(self, movie_id):
         query = "SELECT COUNT(*) FROM reviews where movie_id=%s"
@@ -145,6 +151,7 @@ class Movie:
         n = n[0][0]
         query = "select sum(rating) from reviews where movie_id=%s"
         s_rating = self.db.fetch_query(query, (movie_id,))[0][0]
+        
         new_rating = s_rating/n
         query = "update movies set rating=%s where movie_id=%s"
         self.db.execute_query(query, (new_rating, movie_id))
